@@ -5,10 +5,36 @@ export default function App() {
   const [amount, setAmount] = useState("");
   const [result, setResult] = useState<string | null>(null);
 
-  const convert = () => {
-    // Placeholder conversion (1TND = 0.3 USD)
-    const usd = (parseFloat(amount) * 0.32).toFixed(2);
-    setResult(`${amount} TND = ${usd} USD`);
+  const convert = async () => {
+    try {
+      const res = await fetch(
+        "https://api.apilayer.com/exchangerates_data/latest?base=TND&symbols=USD",
+        {
+          method: "GET",
+          headers: {
+            apikey: "uEyWsCc6SGauNOZYvMO097uVYHXKua4Y",
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      // Debugging
+      console.log(data);
+
+      if (data && data.rates) {
+        const usdRate = data.rates.USD;
+
+        const usd = (parseFloat(amount) * usdRate).toFixed(2);
+
+        setResult(`${amount} TND = ${usd} USD`);
+      } else {
+        setResult("No rates found, check API response");
+      }
+    } catch (error) {
+      console.error(error);
+      setResult("Error fetching exchange rates");
+    }
   };
 
   return (
