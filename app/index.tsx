@@ -4,13 +4,13 @@ import { Picker } from "@react-native-picker/picker";
 
 export default function App() {
   const [amount, setAmount] = useState("");
-  const [currency, setCurrency] = useState("");
+  const [currency, setCurrency] = useState("USD"); // target Currency
   const [result, setResult] = useState<string | null>(null);
 
   const convert = async () => {
     try {
       const res = await fetch(
-        "https://api.apilayer.com/exchangerates_data/latest?base=TND&symbols=USD,EUR,GBP",
+        `https://api.apilayer.com/exchangerates_data/latest?base=TND&symbols=${currency}`,
         {
           method: "GET",
           headers: {
@@ -25,17 +25,10 @@ export default function App() {
       console.log(data);
 
       if (data && data.rates) {
-        const usdRate = data.rates.USD;
-        const eurRate = data.rates.EUR;
-        const gbpRate = data.rates.GBP;
+        const rate = data.rates[currency];
+        const converted = (parseFloat(amount)*rate).toFixed(2);
 
-        const usd = (parseFloat(amount) * usdRate).toFixed(2);
-        const eur = (parseFloat(amount) * eurRate).toFixed(2);
-        const gbp = (parseFloat(amount) * gbpRate).toFixed(2);
-
-        if(currency=="USD") setResult(`${amount} TND = ${usd} USD`);
-        if(currency=="EUR") setResult(`${amount} TND = ${eur} EUR`);
-        if(currency=="GBP") setResult(`${amount} TND = ${gbp} GBP`);
+        setResult(`${amount} TND = ${converted} ${currency}`);
       } else {
         setResult("No rates found, check API response");
       }
@@ -48,14 +41,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>💱 TND Converter</Text>
-      <Picker
-      selectedValue={currency}
-      style={{height: 50, width: 150}}
-      onValueChange={(itemValue) => setCurrency(itemValue)}>
-        <Picker.Item label="USD" value="USD" />
-        <Picker.Item label="EUR" value="EUR" />
-        <Picker.Item label="GBP" value="GBP" />
-      </Picker>
+      
       <TextInput
         style={styles.input}
         keyboardType="numeric"
@@ -63,6 +49,16 @@ export default function App() {
         value={amount}
         onChangeText={setAmount}
       />
+      <Picker
+      selectedValue={currency}
+      style={styles.picker}
+      onValueChange={(itemValue) => setCurrency(itemValue)}>
+        <Picker.Item label="USD" value="USD" />
+        <Picker.Item label="EUR" value="EUR" />
+        <Picker.Item label="GBP" value="GBP" />
+        <Picker.Item label="CAD" value="CAD" />
+        <Picker.Item label="JPY" value="JPY" />
+      </Picker>
       <Button title ="Convert" onPress={convert} />
       {result && <Text style={styles.result}>{result}</Text>}
     </View>
@@ -74,4 +70,5 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, marginBottom: 20 },
   input: {borderWidth: 1, padding: 10, width: "80%", marginBottom: 20, borderRadius: 8 },
   result: { fontSize: 18, marginTop: 20, fontWeight: "bold" },
+  picker: {height: 50, width: 200, marginBottom: 20, },
 });
